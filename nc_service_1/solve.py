@@ -63,41 +63,58 @@ class MT19937:
 
 class Solver:
     def __init__(self):
-        # We start the service as a subprocess
-        env = os.environ.copy()
-        env["FLAG"] = "PascalCTF{SeEd_Truncation_Is_Weakness}" # Dummy flag for local testing
-        self.proc = subprocess.Popen(
-            ["python3", "service.py"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            text=True,
-            bufsize=1,
-            env=env
-        )
+        import socket
+        self.host = "wordy.ctf.pascalctf.it"
+        self.port = 5005
+        print(f"[*] Connecting to {self.host}:{self.port}...")
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((self.host, self.port))
+        self.buffer = ""
         self.read_until("READY")
 
     def read_until(self, substring):
-        buffer = ""
-        while True:
-            char = self.proc.stdout.read(1)
-            if not char:
+        while substring not in self.buffer:
+            data = self.sock.recv(1024).decode()
+            if not data:
                 break
-            buffer += char
-            if substring in buffer:
-                return buffer
-        return buffer
+            self.buffer += data
+        
+        # Determine where the substring ends to keep the rest in buffer
+        # But for this simple protocol, we just rely on the buffer accumulating
+        return self.buffer
 
     def send(self, line):
-        self.proc.stdin.write(line + "\n")
-        self.proc.stdin.flush()
+        self.sock.sendall((line + "\n").encode())
 
     def get_feedback(self):
-        # Reads "FEEDBACK GGGGG"
-        # Skip until "FEEDBACK"
-        data = self.read_until("FEEDBACK")
-        # Read next part
-        feedback = self.proc.stdout.readline().strip()
-        return feedback
+        # The buffer might already have the feedback line if we read too much
+        # But usually we read until "FEEDBACK"
+        if "FEEDBACK" not in self.buffer:
+             self.read_until("FEEDBACK")
+        
+        # Now parse it out.
+        # Format might be "... FEEDBACK GGGGG\n"
+        # We need to be careful with the buffer management.
+        
+        # Simpler approach: read line by line from buffer
+        # But let's just do a specialized read.
+        
+        # Ensure we have the full line after FEEDBACK
+        while True:
+             if "FEEDBACK " in self.buffer:
+                 parts = self.buffer.split("FEEDBACK ")
+                 if '\n' in parts[1]:
+                     feedback = parts[1].split('\n')[0].strip()
+                     # Clear buffer up to that point to avoid re-reading
+                     # (Not strictly necessary for this linear flow but good practice)
+                     self.buffer = parts[1].split('\n', 1)[1] if '\n' in parts[1] else ""
+                     return feedback
+             
+             data = self.sock.recv(1024).decode()
+             if not data:
+                 break
+             self.buffer += data
+        return ""
 
     def recover_round_secret(self):
         # 16-guess strategy to recover secret perfectly
@@ -187,7 +204,21 @@ class Solver:
             self.send(f"FINAL {next_secret}")
             
             # Check response
-            resp = self.proc.stdout.readline().strip()
+            # We expect "OK" or "FAIL"
+            while "OK" not in self.buffer and "FAIL" not in self.buffer and "ERR" not in self.buffer:
+                 data = self.sock.recv(1024).decode()
+                 if not data: break
+                 self.buffer += data
+            
+            # Extract line
+            if "OK " in self.buffer:
+                resp = "OK " + self.buffer.split("OK ")[1].split("\n")[0]
+                # clear buffer
+                if "\n" in self.buffer.split("OK ")[1]:
+                    self.buffer = self.buffer.split("OK ")[1].split("\n", 1)[1]
+            else:
+                 resp = self.buffer.split("\n")[0] # Fallback
+            
             print(f"    Server: {resp}")
             if "OK" in resp and "{" in resp:
                 print(f"\n[!!!] FLAG CAPTURED: {resp.split()[-1]}")
