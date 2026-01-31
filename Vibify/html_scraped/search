@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - Leet Songs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background-color: #000000;
+            padding: 24px 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 32px;
+            padding-left: 12px;
+        }
+
+        .nav-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #b3b3b3;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            color: #ffffff;
+            background-color: #282828;
+        }
+
+        .nav-item.active {
+            background-color: #1db954;
+            color: #ffffff;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: linear-gradient(180deg, #1e3264 0%, #121212 50%);
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .search-title {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .search-bar {
+            background-color: #242424;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 16px;
+            color: #ffffff;
+            width: 400px;
+            font-size: 14px;
+        }
+
+        .search-bar::placeholder {
+            color: #b3b3b3;
+        }
+
+        /* Search Results */
+        .search-section {
+            margin-top: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .songs-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .song-item:hover {
+            background-color: #282828;
+        }
+
+        .song-artwork {
+            width: 40px;
+            height: 40px;
+            background-color: #282828;
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .song-info {
+            flex: 1;
+        }
+
+        .song-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .song-artist {
+            color: #b3b3b3;
+            font-size: 14px;
+        }
+
+        .song-duration {
+            color: #b3b3b3;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #b3b3b3;
+            font-size: 18px;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #f87171;
+            font-size: 18px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #b3b3b3;
+            font-size: 18px;
+        }
+
+        /* Bottom Player */
+        .player {
+            height: 90px;
+            background-color: #181818;
+            border-top: 1px solid #282828;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .player-left {
+            display: flex;
+            align-items: center;
+            width: 240px;
+        }
+
+        .player-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .play-btn {
+            background: #1db954;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #000;
+            font-size: 16px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            max-width: 500px;
+            height: 4px;
+            background-color: #535353;
+            border-radius: 2px;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #1db954;
+            border-radius: 2px;
+            width: 30%;
+        }
+
+        .player-right {
+            width: 240px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Lyrics Panel */
+        .lyrics-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background-color: #181818;
+            border-left: 1px solid #282828;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lyrics-panel.open {
+            right: 0;
+        }
+
+        .lyrics-header {
+            padding: 24px;
+            border-bottom: 1px solid #282828;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lyrics-close {
+            background: none;
+            border: none;
+            color: #b3b3b3;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .lyrics-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            color: #ffffff;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .lyrics-btn {
+            background: none;
+            border: none;
+            color: #1db954;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .lyrics-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">🎵 Leet Songs</div>
+            <div class="nav-item" onclick="location.href='/home'">🏠 Home</div>
+            <div class="nav-item active">🔍 Search</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="search-title">Search</div>
+                <input type="text" class="search-bar" placeholder="What do you want to listen to?" id="search-input" onkeypress="handleSearchKeypress(event)">
+            </div>
+
+            <div class="search-section">
+                <div class="section-title" id="results-title">
+                    
+                        Enter a search term 
+                    
+                </div>
+                <div id="search-results">
+                    
+                        <div class="no-results">Type something to search for music</div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Player -->
+    <div class="player">
+        <div class="player-left">
+            <div class="song-artwork">🎵</div>
+            <div style="margin-left: 12px;">
+                <div class="song-title">Select a song</div>
+                <div class="song-artist">Artist</div>
+            </div>
+            <button class="lyrics-btn" onclick="showLyrics()">🎤</button>
+        </div>
+        
+        <div class="player-center">
+            <div class="player-controls">
+                <button style="background: none; border: none; color: #b3b3b3; cursor: pointer;">⏮</button>
+                <button class="play-btn" onclick="togglePlayPause()">▶</button>
+                <button style="background: none; border: none; color: #b3b3b3; cursor: pointer;">⏭</button>
+            </div>
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+        </div>
+
+        <div class="player-right">
+            <button style="background: none; border: none; color: #b3b3b3; cursor: pointer; margin-right: 16px;">🔊</button>
+        </div>
+    </div>
+
+    <!-- Lyrics Panel -->
+    <div id="lyrics-panel" class="lyrics-panel">
+        <div class="lyrics-header">
+            <h3>Lyrics</h3>
+            <button class="lyrics-close" onclick="hideLyrics()">×</button>
+        </div>
+        <div id="lyrics-content" class="lyrics-content">
+            Select a song to view lyrics
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // Function to format duration from seconds to mm:ss
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Function to display search results
+        function displaySearchResults(results, query) {
+            const container = document.getElementById('search-results');
+            const title = document.getElementById('results-title');
+            
+            title.textContent = `Search results for "${query}"`;
+            
+            if (!results || results.length === 0) {
+                container.innerHTML = '<div class="no-results">No songs found for your search.</div>';
+                return;
+            }
+
+            const songsHTML = results.map((song, index) => `
+                <div class="song-item" onclick="playSong('${song.title}', '${song.artist}', '${song.url}', ${song.duration}, ${index}, '${song.lyrics || ''}')">
+                    <div class="song-artwork">🎵</div>
+                    <div class="song-info">
+                        <div class="song-title">${song.title || 'Unknown Title'}</div>
+                        <div class="song-artist">${song.artist || 'Unknown Artist'}</div>
+                    </div>
+                    <div class="song-duration">${formatDuration(parseInt(song.duration))}</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="songs-grid">${songsHTML}</div>`;
+        }
+
+        // Function to perform search
+        async function performSearch(query) {
+            if (!query.trim()) {
+                const container = document.getElementById('search-results');
+                const title = document.getElementById('results-title');
+                title.textContent = 'Enter a search term';
+                container.innerHTML = '<div class="no-results">Type something to search for music</div>';
+                return;
+            }
+
+            const container = document.getElementById('search-results');
+            container.innerHTML = '<div class="loading">Searching...</div>';
+            
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                
+                if (response.status === 404) {
+                    const errorData = await response.json();
+                    const title = document.getElementById('results-title');
+                    title.textContent = `Search results for "${query}"`;
+                    container.innerHTML = '<div class="no-results">Your query didn\'t return any results.</div>';
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displaySearchResults(data, query);
+            } catch (error) {
+                console.error('Error searching:', error);
+                document.getElementById('search-results').innerHTML = `
+                    <div class="error">
+                        Unable to search. Please try again later.
+                        <br><small>Error: ${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Handle search input keypress
+        function handleSearchKeypress(event) {
+            if (event.key === 'Enter') {
+                const query = event.target.value;
+                performSearch(query);
+                // Update URL without page reload
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('q', query);
+                window.history.pushState({}, '', newUrl);
+            }
+        }
+
+        // Audio player functionality
+        let currentAudio = null;
+        let isPlaying = false;
+        let currentLyrics = '';
+
+        function playSong(title, artist, url, duration, index, lyricsUrl) {
+            const playerTitle = document.querySelector('.player-left .song-title');
+            const playerArtist = document.querySelector('.player-left .song-artist');
+            const playBtn = document.querySelector('.play-btn');
+            
+            playerTitle.textContent = title;
+            playerArtist.textContent = artist;
+            playBtn.innerHTML = '⏸';
+            
+            currentLyrics = lyricsUrl;
+            
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            currentAudio = new Audio(url);
+            currentAudio.addEventListener('timeupdate', updateProgressBar);
+            
+            currentAudio.play().then(() => {
+                isPlaying = true;
+            }).catch(error => {
+                console.error('Error playing audio:', error);
+                playBtn.innerHTML = '▶';
+                isPlaying = false;
+            });
+            
+            currentAudio.addEventListener('ended', () => {
+                isPlaying = false;
+                playBtn.innerHTML = '▶';
+            });
+        }
+
+        function togglePlayPause() {
+            const playBtn = document.querySelector('.play-btn');
+            
+            if (currentAudio) {
+                if (isPlaying) {
+                    currentAudio.pause();
+                    isPlaying = false;
+                    playBtn.innerHTML = '▶';
+                } else {
+                    currentAudio.play().then(() => {
+                        isPlaying = true;
+                        playBtn.innerHTML = '⏸';
+                    }).catch(error => {
+                        console.error('Error playing audio:', error);
+                    });
+                }
+            }
+        }
+
+        function updateProgressBar() {
+            if (currentAudio) {
+                const progress = document.querySelector('.progress');
+                const currentTime = currentAudio.currentTime;
+                const duration = currentAudio.duration;
+                
+                if (duration) {
+                    const progressPercent = (currentTime / duration) * 100;
+                    progress.style.width = progressPercent + '%';
+                }
+            }
+        }
+
+        async function showLyrics() {
+            const lyricsPanel = document.getElementById('lyrics-panel');
+            const lyricsContent = document.getElementById('lyrics-content');
+            
+            if (!currentLyrics) {
+                lyricsContent.textContent = 'No lyrics available for this song.';
+                lyricsPanel.classList.add('open');
+                return;
+            }
+            
+            try {
+                const response = await fetch(currentLyrics);
+                if (response.ok) {
+                    const lyrics = await response.text();
+                    lyricsContent.textContent = lyrics;
+                } else {
+                    lyricsContent.textContent = 'Unable to load lyrics.';
+                }
+            } catch (error) {
+                console.error('Error loading lyrics:', error);
+                lyricsContent.textContent = 'Error loading lyrics.';
+            }
+            
+            lyricsPanel.classList.add('open');
+        }
+
+        function hideLyrics() {
+            const lyricsPanel = document.getElementById('lyrics-panel');
+            lyricsPanel.classList.remove('open');
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            const query = getUrlParameter('q');
+            if (query) {
+                document.getElementById('search-input').value = query;
+                performSearch(query);
+            }
+        });
+    </script>
+</body>
+</html>

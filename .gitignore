@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .DS_Store
 XXE_CHALLENGE/uploads/
+nc_service_1/crack_seed
