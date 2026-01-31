@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book>
+  <title>Safe Book</title>
+  <author>Valid User</author>
+  <year>2023</year>
+  <isbn>978-0-123-45678-9</isbn>
+  <chapters>
+    <chapter number="1">
+      <title>Introduction</title>
+      <content>This is the content of the chapter. It contains no banned words.</content>
+    </chapter>
+    <chapter number="2">
+      <title>Details</title>
+      <content>More safe content here.</content>
+    </chapter>
+  </chapters>
+</book>
